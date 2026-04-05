@@ -2,12 +2,14 @@
 set -e
 
 MODE=${1:-""}
+PROJECT_PATH=""
 
 usage() {
-  echo "Usage: bash install.sh [--global | --project]"
+  echo "Usage: bash install.sh [--global | --project [--path <dir>]]"
   echo ""
-  echo "  --global   Install agents, skills, and CLAUDE.md to ~/.claude/ (affects all projects)"
-  echo "  --project  Install agents and skills into .claude/ in the current directory"
+  echo "  --global        Install agents, skills, and CLAUDE.md to ~/.claude/ (affects all projects)"
+  echo "  --project       Install agents and skills into a project directory"
+  echo "  --path <dir>    Target directory for project install (default: current directory)"
   echo ""
   echo "If no flag is provided, you will be prompted to choose."
 }
@@ -17,16 +19,42 @@ if [ "$MODE" = "--help" ] || [ "$MODE" = "-h" ]; then
   exit 0
 fi
 
+# Parse flags
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --global)  MODE="--global"; shift ;;
+    --project) MODE="--project"; shift ;;
+    --path)    PROJECT_PATH="$2"; shift 2 ;;
+    --help|-h) usage; exit 0 ;;
+    *)         echo "Unknown option: $1"; usage; exit 1 ;;
+  esac
+done
+
 if [ -z "$MODE" ]; then
   echo "Where would you like to install?"
   echo "  1) Global (~/.claude/) — available in all projects"
-  echo "  2) Project (.claude/)  — current directory only"
+  echo "  2) Project (.claude/)  — specific project directory"
   read -rp "Choose [1/2]: " choice
   case "$choice" in
     1) MODE="--global" ;;
-    2) MODE="--project" ;;
+    2)
+      MODE="--project"
+      read -rp "Project path [default: current directory]: " input_path
+      if [ -n "$input_path" ]; then
+        PROJECT_PATH="$input_path"
+      fi
+      ;;
     *) echo "Invalid choice."; exit 1 ;;
   esac
+fi
+
+# Resolve project target dir
+if [ "$MODE" = "--project" ]; then
+  if [ -z "$PROJECT_PATH" ]; then
+    PROJECT_DIR="$(pwd)"
+  else
+    PROJECT_DIR="$(realpath "$PROJECT_PATH")"
+  fi
 fi
 
 install_agents() {
@@ -36,11 +64,11 @@ install_agents() {
       mkdir -p ~/.claude/agents
       cd agency-agents && bash scripts/install.sh --tool claude-code 2>&1 | grep -E "OK|Error|agents" && cd ..
     else
-      mkdir -p .claude/agents
+      mkdir -p "$PROJECT_DIR/.claude/agents"
       cp -r agency-agents/engineering agency-agents/design agency-agents/marketing \
             agency-agents/product agency-agents/testing agency-agents/specialized \
-            .claude/agents/ 2>/dev/null || true
-      echo "[OK] Agents -> .claude/agents/"
+            "$PROJECT_DIR/.claude/agents/" 2>/dev/null || true
+      echo "[OK] Agents -> $PROJECT_DIR/.claude/agents/"
     fi
   else
     echo "Warning: agency-agents submodule not found. Run: git submodule update --init"
@@ -53,7 +81,7 @@ install_skills() {
   if [ "$dest" = "global" ]; then
     target=~/.claude/skills
   else
-    target=.claude/skills
+    target="$PROJECT_DIR/.claude/skills"
   fi
   mkdir -p "$target"
   for skill_dir in skills/*/; do
@@ -81,18 +109,20 @@ install_claude_md() {
     cp CLAUDE.md ~/.claude/CLAUDE.md
     echo "[OK] CLAUDE.md -> ~/.claude/CLAUDE.md"
   else
-    if [ -f .claude/CLAUDE.md ] || [ -f CLAUDE.md ]; then
+    local project_claude_md="$PROJECT_DIR/.claude/CLAUDE.md"
+    local project_root_claude_md="$PROJECT_DIR/CLAUDE.md"
+    if [ -f "$project_claude_md" ] || [ -f "$project_root_claude_md" ]; then
       echo ""
-      echo "Warning: A CLAUDE.md already exists in this project."
+      echo "Warning: A CLAUDE.md already exists in $PROJECT_DIR."
       read -rp "Overwrite? [y/N]: " confirm
       if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         echo "Skipped CLAUDE.md"
         return
       fi
     fi
-    mkdir -p .claude
-    cp CLAUDE.md .claude/CLAUDE.md
-    echo "[OK] CLAUDE.md -> .claude/CLAUDE.md"
+    mkdir -p "$PROJECT_DIR/.claude"
+    cp CLAUDE.md "$project_claude_md"
+    echo "[OK] CLAUDE.md -> $project_claude_md"
   fi
 }
 
@@ -117,6 +147,8 @@ if [ "$MODE" = "--global" ]; then
   install_claude_md global
   install_ralph
 elif [ "$MODE" = "--project" ]; then
+  echo "Target: $PROJECT_DIR"
+  echo ""
   install_agents project
   install_skills project
   install_claude_md project

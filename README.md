@@ -14,7 +14,11 @@ You'll be prompted to choose between two install modes:
 
 **Global** (`~/.claude/`) — agents, skills, and CLAUDE.md are available across every project on your machine. Will warn before overwriting anything that already exists.
 
-**Per-project** (`.claude/` in your current directory) — installs only into the project you're working in, doesn't touch your global Claude setup. Useful if you want to scope it to a specific repo or share the config with a team by committing `.claude/`. Run from inside the project you want to install into.
+**Per-project** — installs into a specific project directory, doesn't touch your global Claude setup. Useful if you want to scope it to a specific repo or share the config with a team by committing `.claude/`. You'll be prompted for a target path (defaults to current directory), or pass it directly:
+
+```bash
+bash install.sh --project --path ~/projects/myapp
+```
 
 Restart Claude Code after installing.
 
