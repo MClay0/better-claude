@@ -144,3 +144,14 @@
   - The vault-scaffold.sh template loop picks up any *.md in obsidian/templates/ automatically; adding a new template requires only creating the file, not editing vault-scaffold.sh
   - Person note filename convention is `People/<Firstname-Lastname>.md` (title case, hyphens) — this is a naming convention for Claude to follow, not enforced by vault-scaffold.sh
 ---
+
+## Iteration 12 - US-012: Contact extraction skill
+- Created `skills/obsidian-contacts/SKILL.md`
+- Defines 4 trigger phrases; instructs Claude to check People/<Name>.md existence, create from person.md template or append Interactions entry; links to Projects/Decisions notes; confirms with created/updated list
+- Explicitly forbids overwriting Background or Notes sections
+- install.sh `install_skills()` loop picks up new skill directory automatically — no install.sh changes needed
+- Files changed: skills/obsidian-contacts/SKILL.md (new), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - Skill files are pure markdown — bash -n on install.sh is sufficient as a proxy test
+  - All 4 skills (prd, systematic-debugging, obsidian-log, obsidian-contacts) follow the same directory pattern; the install loop is truly zero-config for new skills
+---

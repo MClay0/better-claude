@@ -141,12 +141,12 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want to paste meeting notes or an email and have Claude automatically extract people and create or update their vault notes so I build a living contacts graph over time.
 
 **Acceptance Criteria:**
-- [ ] `skills/obsidian-contacts/SKILL.md` defines triggers: "extract contacts", "log meeting notes", "process this email", "update contacts from this"
-- [ ] Skill instructs Claude to: identify all named people in the pasted content, check if `People/<Name>.md` exists, create from template if not, append a new entry under Interactions with date and one-line summary if it does
-- [ ] Skill instructs Claude to link each person note to any relevant `Projects/` or `Decisions/` note mentioned in the content
-- [ ] Skill instructs Claude to confirm: list of names processed and whether each was created or updated
-- [ ] Claude never overwrites existing Background or Notes sections — only appends to Interactions
-- [ ] `install.sh` installs this skill alongside other skills
+- [x] `skills/obsidian-contacts/SKILL.md` defines triggers: "extract contacts", "log meeting notes", "process this email", "update contacts from this"
+- [x] Skill instructs Claude to: identify all named people in the pasted content, check if `People/<Name>.md` exists, create from template if not, append a new entry under Interactions with date and one-line summary if it does
+- [x] Skill instructs Claude to link each person note to any relevant `Projects/` or `Decisions/` note mentioned in the content
+- [x] Skill instructs Claude to confirm: list of names processed and whether each was created or updated
+- [x] Claude never overwrites existing Background or Notes sections — only appends to Interactions
+- [x] `install.sh` installs this skill alongside other skills
 
 ## Non-Goals
 
