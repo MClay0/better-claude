@@ -1,0 +1,20 @@
+# Progress Log
+
+## Learnings
+(Patterns discovered during implementation)
+
+---
+
+## Iteration 1 - US-001: Vault scaffold script
+- Created `obsidian/vault-scaffold.sh`
+- Creates all required directories, .obsidian/app.json, .gitignore, README.md, runs git init
+- All operations guarded with [ ! -f ] / [ ! -d ] checks for idempotency
+- Copies templates from sibling `templates/` dir if it exists (forward-compatible with US-002)
+- Defaults VAULT_PATH to ~/vault when env var is unset
+- Files changed: obsidian/vault-scaffold.sh (new), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - `realpath -m` works even if path doesn't exist yet (use instead of `realpath` alone)
+  - WSL distro name lives in /etc/os-release NAME= field; use grep+cut+tr to extract cleanly
+  - UNC path sed replacement: double-escape backslashes in shell sed expressions
+  - Templates dir alongside vault-scaffold.sh: `$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/templates`
+---
