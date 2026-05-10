@@ -29,3 +29,16 @@
   - Idempotency confirmed: re-running vault-scaffold.sh prints [SKIP] for each existing template
   - `{{placeholder}}` syntax used in templates for fields Claude fills in at note creation time
 ---
+
+## Iteration 3 - US-003: GitHub remote setup and Windows UNC path output
+- Extended `obsidian/vault-scaffold.sh` with initial git commit and end-of-run output
+- Moved DISTRO/UNC_PATH computation to script top (was duplicated inside README block)
+- Added `git add -A && git commit` block after git init; guards with `diff --cached --quiet` to skip if nothing staged
+- Commit is attempted with `|| echo [WARN]` so `set -e` doesn't abort on failure (e.g., missing user config)
+- Printed UNC path and exact instruction strings from acceptance criteria at end of script
+- Files changed: obsidian/vault-scaffold.sh (modified), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - `git diff --cached --quiet` returns exit 1 when staged changes exist — invert with `!` to detect "something to commit"
+  - UNC path sed for non-/home/ paths just converts slashes; only /home/ prefix gets the \\wsl$\ substitution
+  - Idempotency second-run correctly shows [SKIP] Nothing to commit
+---

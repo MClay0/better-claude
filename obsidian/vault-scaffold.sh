@@ -4,6 +4,10 @@ set -e
 VAULT_PATH="${VAULT_PATH:-$HOME/vault}"
 VAULT_PATH="$(realpath -m "$VAULT_PATH")"
 
+# Distro name and Windows UNC path (used in README and end-of-run output)
+DISTRO=$(grep ^NAME= /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"' || echo "Ubuntu")
+UNC_PATH=$(echo "$VAULT_PATH" | sed "s|^/home/|\\\\\\\\wsl\$\\\\${DISTRO}\\\\home\\\\|" | sed 's|/|\\|g')
+
 echo "Scaffolding vault at: $VAULT_PATH"
 
 # Create directory structure (idempotent)
@@ -44,9 +48,6 @@ fi
 # README.md (idempotent)
 README="$VAULT_PATH/README.md"
 if [ ! -f "$README" ]; then
-  DISTRO=$(grep ^NAME= /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"' || echo "Ubuntu")
-  # Convert /home/... to Windows UNC path
-  UNC_PATH=$(echo "$VAULT_PATH" | sed "s|^/home/|\\\\\\\\wsl\$\\\\${DISTRO}\\\\home\\\\|" | sed 's|/|\\|g')
   cat > "$README" <<EOF
 # Vault
 
@@ -110,5 +111,23 @@ else
   echo "[SKIP] git repo already initialised"
 fi
 
+# Initial commit if there are changes to stage
+git -C "$VAULT_PATH" add -A 2>/dev/null || true
+if ! git -C "$VAULT_PATH" diff --cached --quiet 2>/dev/null; then
+  git -C "$VAULT_PATH" commit -m "init: vault scaffold" -q 2>/dev/null \
+    && echo "[OK] Initial commit: init: vault scaffold" \
+    || echo "[WARN] Could not create initial commit (check git config user.name/user.email)"
+else
+  echo "[SKIP] Nothing to commit"
+fi
+
 echo ""
 echo "Vault ready: $VAULT_PATH"
+echo ""
+echo "Windows UNC path for Obsidian:"
+echo "  $UNC_PATH"
+echo ""
+echo "To sync across devices: create a private GitHub repo, then run:"
+echo "  git remote add origin <url> && git push -u origin main"
+echo ""
+echo "To open in Obsidian: Open Obsidian → Open folder as vault → paste the path above"

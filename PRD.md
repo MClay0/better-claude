@@ -45,11 +45,11 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want the setup script to create an initial git commit and print actionable next steps for GitHub sync and opening the vault in Windows Obsidian.
 
 **Acceptance Criteria:**
-- [ ] After scaffolding, `vault-scaffold.sh` runs `git add -A && git commit -m "init: vault scaffold"` if working tree is clean
-- [ ] Script prints the Windows UNC path: `\\wsl$\<distro>\<vault-path>` computed from `$VAULT_PATH`
-- [ ] Distro name is auto-detected from `/etc/os-release` (`$NAME` field)
-- [ ] Script prints: "To sync across devices: create a private GitHub repo, then run: `git remote add origin <url> && git push -u origin main`"
-- [ ] Script prints: "To open in Obsidian: Open Obsidian → Open folder as vault → paste the path above"
+- [x] After scaffolding, `vault-scaffold.sh` runs `git add -A && git commit -m "init: vault scaffold"` if working tree is clean
+- [x] Script prints the Windows UNC path: `\\wsl$\<distro>\<vault-path>` computed from `$VAULT_PATH`
+- [x] Distro name is auto-detected from `/etc/os-release` (`$NAME` field)
+- [x] Script prints: "To sync across devices: create a private GitHub repo, then run: `git remote add origin <url> && git push -u origin main`"
+- [x] Script prints: "To open in Obsidian: Open Obsidian → Open folder as vault → paste the path above"
 
 ### US-004: CLAUDE.md vault context block
 **Description:** As Claude, I want a vault context section in CLAUDE.md so I have ambient awareness of the vault location and know how to load project context on demand.
