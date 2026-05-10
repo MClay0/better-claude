@@ -86,3 +86,16 @@
   - Test overwrite branch by running script twice — second run triggers [OVERWRITE] message
   - Restore git config with `--unset` fallback for CI environments that had no prior hooksPath
 ---
+
+## Iteration 7 - US-007: Session-start queue processor
+- Created `obsidian/hooks/session-start.sh` — reads *.json from .queue/ (maxdepth 1), prints context block, moves files to processed/
+- Updated `obsidian/install-hooks.sh` to register session-start in ~/.claude/settings.json under hooks.UserPromptSubmit
+- JSON manipulation uses jq: `.hooks.UserPromptSubmit = (.hooks.UserPromptSubmit // []) + [$entry]` handles missing key gracefully
+- Idempotency: jq select-based check prevents duplicate hook entries
+- Files changed: obsidian/hooks/session-start.sh (new), obsidian/install-hooks.sh (modified), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - `find -maxdepth 1 -name "*.json" -type f` is the safe way to get .queue/ files without descending into processed/
+  - `mapfile -t ARRAY < <(find ...)` with `${#ARRAY[@]}` for count handles empty result correctly
+  - jq `(.key // []) + [$new_entry]` pattern handles absent key, empty array, and populated array uniformly
+  - CLAUDE_OBSIDIAN_DIR env var may already be set in user environment; `: "${VAR:=default}"` respects that
+---
