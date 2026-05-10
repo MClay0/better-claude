@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set +e
+
+# Skip silently if VAULT_PATH unset or directory missing
+[[ -z "${VAULT_PATH:-}" || ! -d "$VAULT_PATH" ]] && exit 0
+
+QUEUE_DIR="$VAULT_PATH/.queue"
+[[ ! -d "$QUEUE_DIR" ]] && exit 0
+
+SHA=$(git rev-parse HEAD 2>/dev/null)
+[[ -z "$SHA" ]] && exit 0
+
+SHORT_MSG=$(git log -1 --format="%s" 2>/dev/null)
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# repo_name: prefer remote origin URL, fall back to directory name
+REMOTE_URL=$(git remote get-url origin 2>/dev/null)
+if [[ -n "$REMOTE_URL" ]]; then
+    REPO_NAME=$(basename "$REMOTE_URL" .git)
+else
+    REPO_NAME=$(basename "$(git rev-parse --show-toplevel)" 2>/dev/null)
+fi
+
+# Build changed_files JSON array
+CHANGED_FILES=$(git diff-tree --no-commit-id -r --name-only HEAD 2>/dev/null \
+    | awk 'BEGIN{printf "["} NR>1{printf ","} {gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); printf "\"" $0 "\""} END{printf "]"}')
+[[ -z "$CHANGED_FILES" ]] && CHANGED_FILES="[]"
+
+# Minimal JSON escaping for string values
+SHA_ESC=$(printf '%s' "$SHA" | sed 's/\\/\\\\/g; s/"/\\"/g')
+MSG_ESC=$(printf '%s' "$SHORT_MSG" | sed 's/\\/\\\\/g; s/"/\\"/g')
+BRANCH_ESC=$(printf '%s' "$BRANCH" | sed 's/\\/\\\\/g; s/"/\\"/g')
+REPO_ESC=$(printf '%s' "$REPO_NAME" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
+printf '{"sha":"%s","short_message":"%s","branch":"%s","repo_name":"%s","changed_files":%s,"timestamp":"%s"}\n' \
+    "$SHA_ESC" "$MSG_ESC" "$BRANCH_ESC" "$REPO_ESC" "$CHANGED_FILES" "$TIMESTAMP" \
+    > "$QUEUE_DIR/${SHA}.json"
+
+exit 0

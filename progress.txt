@@ -2,6 +2,10 @@
 
 ## Learnings
 (Patterns discovered during implementation)
+- `set +e` at top + explicit `exit 0` at bottom is the cleanest way to make a git hook that never fails
+- awk `gsub(/\\/, "\\\\"); gsub(/"/, "\\\"")` handles JSON string escaping inside filenames
+- `git diff-tree --no-commit-id -r --name-only HEAD` lists files changed in last commit; returns empty for initial commit (no parent), yielding `[]` which is valid
+- `basename "$REMOTE_URL" .git` strips both the path prefix and .git suffix from HTTPS or SSH remote URLs
 
 ---
 
@@ -53,4 +57,19 @@
   - `read -r -d '' VAR <<EOF || true` is the cleanest way to capture a heredoc with variable expansion into a variable while keeping set -e
   - `grep -qF` for literal string matching (no regex interpretation of special chars)
   - Test idempotency with a fresh HOME via `HOME=$(mktemp -d)` subshell pattern
+---
+
+## Iteration 5 - US-005: Post-commit queue hook
+- Created `obsidian/hooks/post-commit`
+- Uses `set +e` + explicit `exit 0` — never blocks a commit under any circumstance
+- Silently skips if VAULT_PATH unset or directory/queue-dir missing (no output, no file)
+- Writes `$VAULT_PATH/.queue/<sha>.json` with all 6 required fields
+- changed_files built with awk + double-gsub to handle backslashes and quotes in filenames
+- repo_name: `basename "$REMOTE_URL" .git` for origin remote, else `basename $(git rev-parse --show-toplevel)`
+- Timing: 83ms in WSL — well under 100ms threshold
+- Files changed: obsidian/hooks/post-commit (new), PRD.md (task marked [x]), progress.txt
+- Learnings for future iterations:
+  - `set +e` at script top disables ERR-abort globally — no need for `|| true` on every line
+  - awk is the cleanest way to build a JSON array from newline-separated input
+  - Always test both "VAULT_PATH unset" and "VAULT_PATH dir missing" paths separately
 ---

@@ -66,11 +66,11 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want every git commit to queue a lightweight note entry so no commit is ever lost, without adding any latency to the commit itself.
 
 **Acceptance Criteria:**
-- [ ] `obsidian/hooks/post-commit` is a bash script that exits in <100ms (no Claude invocation)
-- [ ] Writes `$VAULT_PATH/.queue/<sha>.json` with fields: `sha`, `short_message`, `branch`, `repo_name`, `changed_files` (array), `timestamp` (ISO 8601)
-- [ ] `repo_name` is derived from git remote URL if present, else `basename $(git rev-parse --show-toplevel)`
-- [ ] Script exits 0 always — never blocks or errors a commit
-- [ ] Script silently skips (no output, no file written) if `$VAULT_PATH` is unset or does not exist
+- [x] `obsidian/hooks/post-commit` is a bash script that exits in <100ms (no Claude invocation)
+- [x] Writes `$VAULT_PATH/.queue/<sha>.json` with fields: `sha`, `short_message`, `branch`, `repo_name`, `changed_files` (array), `timestamp` (ISO 8601)
+- [x] `repo_name` is derived from git remote URL if present, else `basename $(git rev-parse --show-toplevel)`
+- [x] Script exits 0 always — never blocks or errors a commit
+- [x] Script silently skips (no output, no file written) if `$VAULT_PATH` is unset or does not exist
 
 ### US-006: Global git hook installation
 **Description:** As a user, I want the post-commit hook to apply to all my repos automatically so I never have to configure individual repos.
