@@ -123,3 +123,14 @@
   - Skill files are pure markdown — no test suite to run; syntax-check install.sh with `bash -n` as a proxy
   - `install_skills()` loop `for skill_dir in skills/*/` picks up any new subdirectory automatically; no install.sh edits required for new skills
 ---
+
+## Iteration 10 - US-010: ralph log CLI command
+- Added `ralph log` subcommand block at top of `ralph` script (before the autonomous agent loop)
+- Implements: --decision, --pattern, --session flags; $EDITOR fallback for no-arg invocation; VAULT_PATH guard; --help
+- Writes `$VAULT_PATH/.queue/manual-<ISO8601-timestamp>.json` via jq with type/text/timestamp fields
+- Files changed: ralph (modified), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - Timestamp-based filenames use ISO 8601 (colons valid in Linux filenames); sub-second collisions possible but acceptable for manual CLI use
+  - `jq -n --arg key val '{"key":$key}'` is cleaner than heredoc JSON for structured output
+  - Test VAULT_PATH guard with `VAULT_PATH="" bash script` — passing empty string is not same as unset; use `[ -z "${VAULT_PATH-}" ]` to catch both
+---

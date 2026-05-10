@@ -120,13 +120,13 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want to run `ralph log "..."` outside a Claude session to queue a note that will be written at the next session open.
 
 **Acceptance Criteria:**
-- [ ] `ralph log "<text>"` writes `$VAULT_PATH/.queue/manual-<timestamp>.json` with: `type: manual`, `text`, `timestamp`
-- [ ] `ralph log --decision "<text>"` sets `type: decision` in the queue file
-- [ ] `ralph log --pattern "<text>"` sets `type: pattern` in the queue file
-- [ ] `ralph log --session "<text>"` sets `type: session` in the queue file
-- [ ] `ralph log` with no text argument opens `$EDITOR` for multi-line input; saves result on exit
-- [ ] Prints error `VAULT_PATH is not set` and exits 1 if env var is missing
-- [ ] `ralph log --help` prints usage summary
+- [x] `ralph log "<text>"` writes `$VAULT_PATH/.queue/manual-<timestamp>.json` with: `type: manual`, `text`, `timestamp`
+- [x] `ralph log --decision "<text>"` sets `type: decision` in the queue file
+- [x] `ralph log --pattern "<text>"` sets `type: pattern` in the queue file
+- [x] `ralph log --session "<text>"` sets `type: session` in the queue file
+- [x] `ralph log` with no text argument opens `$EDITOR` for multi-line input; saves result on exit
+- [x] Prints error `VAULT_PATH is not set` and exits 1 if env var is missing
+- [x] `ralph log --help` prints usage summary
 
 ### US-011: People note template
 **Description:** As a user, I want a consistent template for person notes so Claude always captures contact context in a structured, queryable format.
