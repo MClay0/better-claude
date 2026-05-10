@@ -99,3 +99,17 @@
   - jq `(.key // []) + [$new_entry]` pattern handles absent key, empty array, and populated array uniformly
   - CLAUDE_OBSIDIAN_DIR env var may already be set in user environment; `: "${VAR:=default}"` respects that
 ---
+
+## Iteration 8 - US-008: install.sh --obsidian flag
+- Modified `install.sh` to accept `--obsidian` flag via arg parser
+- Added `install_obsidian()` function: prompts for vault path, writes env vars to ~/.bashrc (idempotent via grep+sed), exports vars, runs vault-scaffold.sh / claude-md-block.sh / install-hooks.sh
+- Fixed interactive-prompt guard: changed `if [ -z "$MODE" ]` to `if [ -z "$MODE" ] && [ "$OBSIDIAN" -eq 0 ]` so --obsidian alone skips the mode-selection prompt
+- Updated main execution block: `elif [ "$OBSIDIAN" -eq 0 ]` → usage+exit only when neither MODE nor OBSIDIAN is set; then `if [ "$OBSIDIAN" -eq 1 ]` runs install_obsidian after the MODE block
+- Idempotency: `grep -qF "export VAULT_PATH=" ~/.bashrc` + `sed -i` replaces existing value; only appends when missing
+- Vault-scaffold.sh already prints Windows UNC path and GitHub instructions — no duplication needed
+- Files changed: install.sh (modified), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - When adding a new independent flag alongside existing mode flags, guard interactive prompts with `&& [ "$NEW_FLAG" -eq 0 ]` to prevent them from firing when only the new flag is set
+  - `sed -i "s|export VAR=.*|export VAR=\"$value\"|"` is cleaner than delete+append for idempotent bashrc writes
+  - `BASH_SOURCE[0]` inside a function gives the script's own path — use `dirname` to derive obsidian_dir portably
+---

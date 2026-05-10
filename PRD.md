@@ -98,13 +98,13 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want a single command to set up the entire Obsidian integration so I don't have to run scripts manually or remember any steps.
 
 **Acceptance Criteria:**
-- [ ] `install.sh` accepts `--obsidian` flag, combinable with `--global` or `--project`
-- [ ] When `--obsidian` is passed: prompts for vault path (default `~/vault`), writes `export VAULT_PATH=<path>` and `export CLAUDE_OBSIDIAN_DIR=<path-to-obsidian-dir>` to `~/.bashrc`
-- [ ] Runs `obsidian/vault-scaffold.sh` (creates structure + git init + initial commit)
-- [ ] Runs `obsidian/claude-md-block.sh` (appends vault context to CLAUDE.md)
-- [ ] Runs `obsidian/install-hooks.sh` (global git hook + Claude Code UserPromptSubmit hook)
-- [ ] Prints Windows UNC path and GitHub remote instructions at the end
-- [ ] Full setup completes successfully with: `bash install.sh --global --obsidian`
+- [x] `install.sh` accepts `--obsidian` flag, combinable with `--global` or `--project`
+- [x] When `--obsidian` is passed: prompts for vault path (default `~/vault`), writes `export VAULT_PATH=<path>` and `export CLAUDE_OBSIDIAN_DIR=<path-to-obsidian-dir>` to `~/.bashrc`
+- [x] Runs `obsidian/vault-scaffold.sh` (creates structure + git init + initial commit)
+- [x] Runs `obsidian/claude-md-block.sh` (appends vault context to CLAUDE.md)
+- [x] Runs `obsidian/install-hooks.sh` (global git hook + Claude Code UserPromptSubmit hook)
+- [x] Prints Windows UNC path and GitHub remote instructions at the end
+- [x] Full setup completes successfully with: `bash install.sh --global --obsidian`
 
 ### US-009: Obsidian log skill (mid-session natural language)
 **Description:** As a user, I want to say "log this decision" mid-session and have Claude write the appropriate vault note immediately without breaking flow.

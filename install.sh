@@ -3,13 +3,15 @@ set -e
 
 MODE=${1:-""}
 PROJECT_PATH=""
+OBSIDIAN=0
 
 usage() {
-  echo "Usage: bash install.sh [--global | --project [--path <dir>]]"
+  echo "Usage: bash install.sh [--global | --project [--path <dir>]] [--obsidian]"
   echo ""
   echo "  --global        Install agents, skills, and CLAUDE.md to ~/.claude/ (affects all projects)"
   echo "  --project       Install agents and skills into a project directory"
   echo "  --path <dir>    Target directory for project install (default: current directory)"
+  echo "  --obsidian      Also set up Obsidian vault integration (combinable with --global or --project)"
   echo ""
   echo "If no flag is provided, you will be prompted to choose."
 }
@@ -22,15 +24,16 @@ fi
 # Parse flags
 while [ $# -gt 0 ]; do
   case "$1" in
-    --global)  MODE="--global"; shift ;;
-    --project) MODE="--project"; shift ;;
-    --path)    PROJECT_PATH="$2"; shift 2 ;;
-    --help|-h) usage; exit 0 ;;
-    *)         echo "Unknown option: $1"; usage; exit 1 ;;
+    --global)   MODE="--global"; shift ;;
+    --project)  MODE="--project"; shift ;;
+    --path)     PROJECT_PATH="$2"; shift 2 ;;
+    --obsidian) OBSIDIAN=1; shift ;;
+    --help|-h)  usage; exit 0 ;;
+    *)          echo "Unknown option: $1"; usage; exit 1 ;;
   esac
 done
 
-if [ -z "$MODE" ]; then
+if [ -z "$MODE" ] && [ "$OBSIDIAN" -eq 0 ]; then
   echo "Where would you like to install?"
   echo "  1) Global (~/.claude/) — available in all projects"
   echo "  2) Project (.claude/)  — specific project directory"
@@ -126,6 +129,49 @@ install_claude_md() {
   fi
 }
 
+install_obsidian() {
+  local script_dir
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local obsidian_dir="$script_dir/obsidian"
+
+  echo ""
+  echo "Setting up Obsidian vault integration..."
+
+  # Prompt for vault path
+  local default_vault="$HOME/vault"
+  read -rp "Vault path [default: $default_vault]: " input_vault
+  local vault_path
+  if [ -n "$input_vault" ]; then
+    vault_path="$(realpath -m "$input_vault")"
+  else
+    vault_path="$(realpath -m "$default_vault")"
+  fi
+
+  # Write env vars to ~/.bashrc (idempotent: replace existing exports)
+  local bashrc="$HOME/.bashrc"
+  if grep -qF "export VAULT_PATH=" "$bashrc" 2>/dev/null; then
+    sed -i "s|export VAULT_PATH=.*|export VAULT_PATH=\"$vault_path\"|" "$bashrc"
+  else
+    echo "export VAULT_PATH=\"$vault_path\"" >> "$bashrc"
+  fi
+  if grep -qF "export CLAUDE_OBSIDIAN_DIR=" "$bashrc" 2>/dev/null; then
+    sed -i "s|export CLAUDE_OBSIDIAN_DIR=.*|export CLAUDE_OBSIDIAN_DIR=\"$obsidian_dir\"|" "$bashrc"
+  else
+    echo "export CLAUDE_OBSIDIAN_DIR=\"$obsidian_dir\"" >> "$bashrc"
+  fi
+  echo "[OK] VAULT_PATH=$vault_path written to ~/.bashrc"
+  echo "[OK] CLAUDE_OBSIDIAN_DIR=$obsidian_dir written to ~/.bashrc"
+
+  # Export for current shell so sub-scripts can use them
+  export VAULT_PATH="$vault_path"
+  export CLAUDE_OBSIDIAN_DIR="$obsidian_dir"
+
+  # Run sub-scripts
+  bash "$obsidian_dir/vault-scaffold.sh"
+  bash "$obsidian_dir/claude-md-block.sh"
+  bash "$obsidian_dir/install-hooks.sh"
+}
+
 install_ralph() {
   mkdir -p ~/.local/bin
   cp ralph ~/.local/bin/ralph
@@ -153,10 +199,17 @@ elif [ "$MODE" = "--project" ]; then
   install_skills project
   install_claude_md project
   install_ralph
-else
+elif [ "$OBSIDIAN" -eq 0 ]; then
   usage
   exit 1
 fi
 
+if [ "$OBSIDIAN" -eq 1 ]; then
+  install_obsidian
+fi
+
 echo ""
 echo "Done! Restart Claude Code to pick up new skills and agents."
+if [ "$OBSIDIAN" -eq 1 ]; then
+  echo "Run: source ~/.bashrc  (or open a new terminal) to activate VAULT_PATH and CLAUDE_OBSIDIAN_DIR"
+fi
