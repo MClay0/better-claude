@@ -132,10 +132,10 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want a consistent template for person notes so Claude always captures contact context in a structured, queryable format.
 
 **Acceptance Criteria:**
-- [ ] `obsidian/templates/person.md` — frontmatter: `type: person`, `name`, `role`, `company`, `first-met` (date), `tags`. Sections: Background, Interactions (date + one-liner list), Notes
-- [ ] `vault-scaffold.sh` creates `People/` folder at vault root
-- [ ] `vault-scaffold.sh` copies `person.md` template into `$VAULT_PATH/Templates/`
-- [ ] Person note filenames: `People/<Firstname-Lastname>.md` (hyphens, title case)
+- [x] `obsidian/templates/person.md` — frontmatter: `type: person`, `name`, `role`, `company`, `first-met` (date), `tags`. Sections: Background, Interactions (date + one-liner list), Notes
+- [x] `vault-scaffold.sh` creates `People/` folder at vault root
+- [x] `vault-scaffold.sh` copies `person.md` template into `$VAULT_PATH/Templates/`
+- [x] Person note filenames: `People/<Firstname-Lastname>.md` (hyphens, title case)
 
 ### US-012: Contact extraction skill
 **Description:** As a user, I want to paste meeting notes or an email and have Claude automatically extract people and create or update their vault notes so I build a living contacts graph over time.

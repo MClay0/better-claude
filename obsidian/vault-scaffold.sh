@@ -17,6 +17,7 @@ mkdir -p \
   "$VAULT_PATH/Decisions" \
   "$VAULT_PATH/Patterns" \
   "$VAULT_PATH/Templates" \
+  "$VAULT_PATH/People" \
   "$VAULT_PATH/Personal/School" \
   "$VAULT_PATH/Personal/Bills" \
   "$VAULT_PATH/Personal/Scheduling" \

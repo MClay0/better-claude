@@ -134,3 +134,13 @@
   - `jq -n --arg key val '{"key":$key}'` is cleaner than heredoc JSON for structured output
   - Test VAULT_PATH guard with `VAULT_PATH="" bash script` — passing empty string is not same as unset; use `[ -z "${VAULT_PATH-}" ]` to catch both
 ---
+
+## Iteration 11 - US-011: People note template
+- Created `obsidian/templates/person.md` with frontmatter: type, name, role, company, first-met, tags; sections: Background, Interactions, Notes
+- Added `People/` to mkdir -p block in `obsidian/vault-scaffold.sh`
+- Template copying is handled by existing `for tmpl in "$TEMPLATES_SRC"/*.md` loop — no extra code needed
+- Files changed: obsidian/templates/person.md (new), obsidian/vault-scaffold.sh (modified), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - The vault-scaffold.sh template loop picks up any *.md in obsidian/templates/ automatically; adding a new template requires only creating the file, not editing vault-scaffold.sh
+  - Person note filename convention is `People/<Firstname-Lastname>.md` (title case, hyphens) — this is a naming convention for Claude to follow, not enforced by vault-scaffold.sh
+---
