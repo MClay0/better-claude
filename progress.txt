@@ -42,3 +42,15 @@
   - UNC path sed for non-/home/ paths just converts slashes; only /home/ prefix gets the \\wsl$\ substitution
   - Idempotency second-run correctly shows [SKIP] Nothing to commit
 ---
+
+## Iteration 4 - US-004: CLAUDE.md vault context block
+- Created `obsidian/claude-md-block.sh`
+- Uses `read -r -d '' VAR <<EOF || true` pattern to capture multi-line block with var interpolation; `|| true` prevents set -e from aborting on non-zero from read
+- Idempotency: `grep -qF "# Obsidian Vault"` before appending — skips if heading exists
+- Create-from-scratch path: `mkdir -p` parent dir then `printf '%s\n'` to file
+- Files changed: obsidian/claude-md-block.sh (new), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - `read -r -d '' VAR <<EOF || true` is the cleanest way to capture a heredoc with variable expansion into a variable while keeping set -e
+  - `grep -qF` for literal string matching (no regex interpretation of special chars)
+  - Test idempotency with a fresh HOME via `HOME=$(mktemp -d)` subshell pattern
+---

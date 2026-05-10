@@ -55,12 +55,12 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As Claude, I want a vault context section in CLAUDE.md so I have ambient awareness of the vault location and know how to load project context on demand.
 
 **Acceptance Criteria:**
-- [ ] `obsidian/claude-md-block.sh` appends an `# Obsidian Vault` section to `~/.claude/CLAUDE.md`
-- [ ] Block contains: vault path (`$VAULT_PATH`), vault structure overview (one line per folder), instruction to read `$VAULT_PATH/Projects/<current-git-repo-name>.md` when starting work on a known project
-- [ ] Block instructs Claude: never delete vault files, never overwrite — append and create only
-- [ ] Block instructs Claude: when a `.queue/` file is mentioned, write proper notes before answering
-- [ ] Script is idempotent — checks for `# Obsidian Vault` heading before appending; does not duplicate
-- [ ] If `~/.claude/CLAUDE.md` does not exist, creates it with just the vault block
+- [x] `obsidian/claude-md-block.sh` appends an `# Obsidian Vault` section to `~/.claude/CLAUDE.md`
+- [x] Block contains: vault path (`$VAULT_PATH`), vault structure overview (one line per folder), instruction to read `$VAULT_PATH/Projects/<current-git-repo-name>.md` when starting work on a known project
+- [x] Block instructs Claude: never delete vault files, never overwrite — append and create only
+- [x] Block instructs Claude: when a `.queue/` file is mentioned, write proper notes before answering
+- [x] Script is idempotent — checks for `# Obsidian Vault` heading before appending; does not duplicate
+- [x] If `~/.claude/CLAUDE.md` does not exist, creates it with just the vault block
 
 ### US-005: Post-commit queue hook
 **Description:** As a user, I want every git commit to queue a lightweight note entry so no commit is ever lost, without adding any latency to the commit itself.
