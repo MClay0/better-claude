@@ -110,11 +110,11 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want to say "log this decision" mid-session and have Claude write the appropriate vault note immediately without breaking flow.
 
 **Acceptance Criteria:**
-- [ ] `skills/obsidian-log/SKILL.md` defines trigger phrases: "log this", "log this decision", "log this pattern", "save this", "remember this", "save this pattern", "save this decision"
-- [ ] Skill instructs Claude to: identify note type from phrasing, fill the appropriate template from `$VAULT_PATH/Templates/`, write to the correct vault folder (`Decisions/`, `Patterns/`, `Sessions/`)
-- [ ] Skill instructs Claude to append a wikilink to the new note in `Projects/<current-repo>.md` under the relevant section
-- [ ] Skill instructs Claude to confirm the write with: file path written and one-line summary
-- [ ] `install.sh` installs this skill alongside existing skills in the appropriate target directory
+- [x] `skills/obsidian-log/SKILL.md` defines trigger phrases: "log this", "log this decision", "log this pattern", "save this", "remember this", "save this pattern", "save this decision"
+- [x] Skill instructs Claude to: identify note type from phrasing, fill the appropriate template from `$VAULT_PATH/Templates/`, write to the correct vault folder (`Decisions/`, `Patterns/`, `Sessions/`)
+- [x] Skill instructs Claude to append a wikilink to the new note in `Projects/<current-repo>.md` under the relevant section
+- [x] Skill instructs Claude to confirm the write with: file path written and one-line summary
+- [x] `install.sh` installs this skill alongside existing skills in the appropriate target directory
 
 ### US-010: ralph log CLI command
 **Description:** As a user, I want to run `ralph log "..."` outside a Claude session to queue a note that will be written at the next session open.

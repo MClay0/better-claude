@@ -113,3 +113,13 @@
   - `sed -i "s|export VAR=.*|export VAR=\"$value\"|"` is cleaner than delete+append for idempotent bashrc writes
   - `BASH_SOURCE[0]` inside a function gives the script's own path — use `dirname` to derive obsidian_dir portably
 ---
+
+## Iteration 9 - US-009: Obsidian log skill (mid-session natural language)
+- Created `skills/obsidian-log/SKILL.md`
+- Skill defines 7 trigger phrases, maps them to note types (decision/pattern/session), reads $VAULT_PATH/Templates/, writes to correct vault folder, appends wikilink to Projects/<repo>.md, confirms with file path + one-line summary
+- install.sh `install_skills()` already loops `skills/*/` — no code changes needed; new directory is picked up automatically
+- Files changed: skills/obsidian-log/SKILL.md (new), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - Skill files are pure markdown — no test suite to run; syntax-check install.sh with `bash -n` as a proxy
+  - `install_skills()` loop `for skill_dir in skills/*/` picks up any new subdirectory automatically; no install.sh edits required for new skills
+---
