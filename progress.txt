@@ -18,3 +18,14 @@
   - UNC path sed replacement: double-escape backslashes in shell sed expressions
   - Templates dir alongside vault-scaffold.sh: `$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/templates`
 ---
+
+## Iteration 2 - US-002: Vault note templates
+- Created 5 template files in `obsidian/templates/`: session.md, project.md, decision.md, pattern.md, personal-note.md
+- All templates include YAML frontmatter and use `[[wikilink]]` syntax for cross-references
+- vault-scaffold.sh already had forward-compatible template copying logic from iteration 1; templates just needed to exist
+- Files changed: obsidian/templates/session.md (new), obsidian/templates/project.md (new), obsidian/templates/decision.md (new), obsidian/templates/pattern.md (new), obsidian/templates/personal-note.md (new), PRD.md (task marked [x])
+- Learnings for future iterations:
+  - vault-scaffold.sh already loops `$SCRIPT_DIR/templates/*.md` — no changes needed there
+  - Idempotency confirmed: re-running vault-scaffold.sh prints [SKIP] for each existing template
+  - `{{placeholder}}` syntax used in templates for fields Claude fills in at note creation time
+---

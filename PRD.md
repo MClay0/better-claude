@@ -33,13 +33,13 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a developer, I want template markdown files for each note type so that Claude always writes consistent, graph-compatible notes using `[[wikilink]]` syntax.
 
 **Acceptance Criteria:**
-- [ ] `obsidian/templates/session.md` — frontmatter: `type: session`, `date`, `project` (wikilink), `commits`. Sections: Summary, Files Changed, Decisions Made (link list), Loose Ends
-- [ ] `obsidian/templates/project.md` — frontmatter: `type: project`, `repo`, `status: active`. Sections: Overview, Key Decisions (link list), Recent Sessions (link list)
-- [ ] `obsidian/templates/decision.md` — frontmatter: `type: decision`, `date`, `project` (wikilink). Sections: Context, Decision, Tradeoffs
-- [ ] `obsidian/templates/pattern.md` — frontmatter: `type: pattern`, `tags`. Sections: Description, Example, Gotchas
-- [ ] `obsidian/templates/personal-note.md` — frontmatter: `type: personal`, `date`, `tags`. Free-form body
-- [ ] All templates use `[[wikilink]]` syntax for cross-references
-- [ ] `vault-scaffold.sh` copies all templates into `$VAULT_PATH/Templates/` when run
+- [x] `obsidian/templates/session.md` — frontmatter: `type: session`, `date`, `project` (wikilink), `commits`. Sections: Summary, Files Changed, Decisions Made (link list), Loose Ends
+- [x] `obsidian/templates/project.md` — frontmatter: `type: project`, `repo`, `status: active`. Sections: Overview, Key Decisions (link list), Recent Sessions (link list)
+- [x] `obsidian/templates/decision.md` — frontmatter: `type: decision`, `date`, `project` (wikilink). Sections: Context, Decision, Tradeoffs
+- [x] `obsidian/templates/pattern.md` — frontmatter: `type: pattern`, `tags`. Sections: Description, Example, Gotchas
+- [x] `obsidian/templates/personal-note.md` — frontmatter: `type: personal`, `date`, `tags`. Free-form body
+- [x] All templates use `[[wikilink]]` syntax for cross-references
+- [x] `vault-scaffold.sh` copies all templates into `$VAULT_PATH/Templates/` when run
 
 ### US-003: GitHub remote setup and Windows UNC path output
 **Description:** As a user, I want the setup script to create an initial git commit and print actionable next steps for GitHub sync and opening the vault in Windows Obsidian.
