@@ -76,11 +76,11 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want the post-commit hook to apply to all my repos automatically so I never have to configure individual repos.
 
 **Acceptance Criteria:**
-- [ ] `obsidian/install-hooks.sh` creates `~/.git-hooks/` directory
-- [ ] Writes a `post-commit` wrapper at `~/.git-hooks/post-commit` that exports `VAULT_PATH` and `CLAUDE_OBSIDIAN_DIR` then delegates to `$CLAUDE_OBSIDIAN_DIR/hooks/post-commit`
-- [ ] Wrapper is chmod +x
-- [ ] Runs `git config --global core.hooksPath ~/.git-hooks`
-- [ ] Prints confirmation message and notes any pre-existing `~/.git-hooks/post-commit` that was overwritten
+- [x] `obsidian/install-hooks.sh` creates `~/.git-hooks/` directory
+- [x] Writes a `post-commit` wrapper at `~/.git-hooks/post-commit` that exports `VAULT_PATH` and `CLAUDE_OBSIDIAN_DIR` then delegates to `$CLAUDE_OBSIDIAN_DIR/hooks/post-commit`
+- [x] Wrapper is chmod +x
+- [x] Runs `git config --global core.hooksPath ~/.git-hooks`
+- [x] Prints confirmation message and notes any pre-existing `~/.git-hooks/post-commit` that was overwritten
 
 ### US-007: Session-start queue processor (Claude Code hook)
 **Description:** As a user, I want Claude to see and process any queued commit notes at the start of my next session so vault notes are written automatically.

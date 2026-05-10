@@ -73,3 +73,16 @@
   - awk is the cleanest way to build a JSON array from newline-separated input
   - Always test both "VAULT_PATH unset" and "VAULT_PATH dir missing" paths separately
 ---
+
+## Iteration 6 - US-006: Global git hook installation
+- Created `obsidian/install-hooks.sh`
+- Creates ~/.git-hooks/, writes wrapper post-commit that re-exports VAULT_PATH + CLAUDE_OBSIDIAN_DIR then delegates to the real hook
+- chmod +x on wrapper; sets git config --global core.hooksPath
+- Detects pre-existing ~/.git-hooks/post-commit and prints [OVERWRITE] notice before replacing
+- Tested with isolated HOME via mktemp -d; all 5 acceptance criteria verified
+- Files changed: obsidian/install-hooks.sh (new), PRD.md (task marked [x]), progress.txt
+- Learnings for future iterations:
+  - cat > "$WRAPPER" <<EOF with baked-in env vars (not $()) avoids subshell evaluation at hook-run time
+  - Test overwrite branch by running script twice — second run triggers [OVERWRITE] message
+  - Restore git config with `--unset` fallback for CI environments that had no prior hooksPath
+---
