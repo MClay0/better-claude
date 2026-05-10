@@ -86,13 +86,13 @@ The existing `claude-obsidian-integration` TypeScript project is used as referen
 **Description:** As a user, I want Claude to see and process any queued commit notes at the start of my next session so vault notes are written automatically.
 
 **Acceptance Criteria:**
-- [ ] `obsidian/hooks/session-start.sh` checks for `*.json` files in `$VAULT_PATH/.queue/` (excluding `processed/`)
-- [ ] If queue is empty, script exits silently with no output
-- [ ] If queue has files, script prints a context block to stdout: `VAULT QUEUE: N commits pending. Write session notes for each before responding to the user.` followed by newline-separated JSON of each queued commit
-- [ ] Script moves processed queue files to `$VAULT_PATH/.queue/processed/` immediately after reading them (so Claude Code picks them up only once)
-- [ ] `install-hooks.sh` registers this hook in `~/.claude/settings.json` under `hooks.UserPromptSubmit` with an empty matcher
-- [ ] If `~/.claude/settings.json` does not exist, creates it with just the hook entry
-- [ ] If `hooks.UserPromptSubmit` already exists, appends the entry rather than overwriting
+- [x] `obsidian/hooks/session-start.sh` checks for `*.json` files in `$VAULT_PATH/.queue/` (excluding `processed/`)
+- [x] If queue is empty, script exits silently with no output
+- [x] If queue has files, script prints a context block to stdout: `VAULT QUEUE: N commits pending. Write session notes for each before responding to the user.` followed by newline-separated JSON of each queued commit
+- [x] Script moves processed queue files to `$VAULT_PATH/.queue/processed/` immediately after reading them (so Claude Code picks them up only once)
+- [x] `install-hooks.sh` registers this hook in `~/.claude/settings.json` under `hooks.UserPromptSubmit` with an empty matcher
+- [x] If `~/.claude/settings.json` does not exist, creates it with just the hook entry
+- [x] If `hooks.UserPromptSubmit` already exists, appends the entry rather than overwriting
 
 ### US-008: install.sh --obsidian flag
 **Description:** As a user, I want a single command to set up the entire Obsidian integration so I don't have to run scripts manually or remember any steps.
