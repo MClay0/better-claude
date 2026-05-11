@@ -31,8 +31,32 @@ When starting work on a known project, read \`${VAULT_PATH}/Projects/<current-gi
 ## Rules
 
 - **Never delete or overwrite vault files** — append to existing notes and create new ones only.
-- **When a \`.queue/\` file is mentioned**, read all queued JSON entries and write proper session/decision/pattern notes for each before responding to the user.
+- **Queue processing**: when the session-start hook reports pending commits in \`.queue/processing/\`, write the session notes first, then move each JSON from \`processing/\` to \`processed/\`, then commit the vault (see below).
+- **Auto-commit after writing**: after writing any notes to the vault, run \`git -C ${VAULT_PATH} add -A && git -C ${VAULT_PATH} commit -m "vault: <brief description>"\`. Never leave vault changes uncommitted.
+- **Merge conflicts**: when the session-start hook reports a conflict, read each conflicted file, resolve the markers (keeping both sides' intent where possible), write the resolved file, then commit before responding to the user.
+- **Context tagging**: every note must have a \`context\` field set to one of \`work\`, \`school\`, or \`personal\`. Infer it from the content — \`work\` for code, engineering, professional projects, and business contacts; \`school\` for courses, assignments, professors, and academic deadlines; \`personal\` for life admin, friends, family, and hobbies. When ambiguous, prefer \`work\`.
 - Use \`[[wikilink]]\` syntax for all cross-references between notes.
+
+## Proactive note writing
+
+Write vault notes automatically during conversation — do not wait to be asked. After writing, mention it in one short line and move on. Never interrupt the conversation just to discuss note-writing.
+
+| Trigger | Action |
+|---|---|
+| A meaningful architectural or implementation decision is made | Write \`Decisions/YYYY-MM-DD-<slug>.md\` |
+| A reusable pattern or convention is established or discovered | Write \`Patterns/<slug>.md\` |
+| A person is mentioned with substantive context (role, relationship, anything worth remembering) | Create or update \`People/<Firstname-Lastname>.md\` |
+| Work begins in a git repo with no existing project note | Create \`Projects/<repo-name>.md\` from the project template |
+| A natural stopping point is reached (user says "done", "thanks", "that's it", ends the session) | Write \`Sessions/YYYY-MM-DD-<repo>-<slug>.md\` summarising what was accomplished, decisions made, and loose ends |
+
+**What counts as a meaningful decision:** anything with a tradeoff — choosing a library, picking an architecture, deciding on a naming convention, resolving a design question. Tactical implementation steps do not need a decision note.
+
+**What counts as a reusable pattern:** something you would want to apply again in a future session or a different repo. One-off fixes do not need a pattern note.
+
+**Tone when mentioning a write:** one line, lowercase, no fuss. Examples:
+- \`logged decision → vault/Decisions/2026-05-10-postgres-over-sqlite.md\`
+- \`updated Sarah Chen's contact note\`
+- \`created project note for better-claude\`
 EOF
 
 # Create CLAUDE.md if it does not exist

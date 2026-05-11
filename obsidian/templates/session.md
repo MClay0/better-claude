@@ -1,5 +1,6 @@
 ---
 type: session
+context: {{context}}
 date: {{date}}
 project: "[[{{project}}]]"
 commits: []

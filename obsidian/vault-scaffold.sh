@@ -21,6 +21,7 @@ mkdir -p \
   "$VAULT_PATH/Personal/School" \
   "$VAULT_PATH/Personal/Bills" \
   "$VAULT_PATH/Personal/Scheduling" \
+  "$VAULT_PATH/.queue/processing" \
   "$VAULT_PATH/.queue/processed" \
   "$VAULT_PATH/.obsidian"
 

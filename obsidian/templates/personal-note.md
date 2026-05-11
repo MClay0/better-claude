@@ -1,5 +1,6 @@
 ---
 type: personal
+context: personal
 date: {{date}}
 tags: []
 ---

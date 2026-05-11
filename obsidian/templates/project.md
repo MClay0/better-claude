@@ -1,5 +1,6 @@
 ---
 type: project
+context: {{context}}
 repo: {{repo}}
 status: active
 ---

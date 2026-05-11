@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPT_NAME="$(basename "$0")"
+
+_note_usage() {
+  cat <<EOF
+Usage: $SCRIPT_NAME <command> [options]
+
+Commands:
+  log       Queue a note for writing to the vault at next session open
+  backfill  Queue git commit history from a repo for vault note creation
+  status    Show queue depth and vault git status
+  sync      Commit and push all vault changes to remote
+  help      Show this help
+
+Run '$SCRIPT_NAME <command> --help' for command-specific options.
+EOF
+}
+
+_require_vault() {
+  if [ -z "${VAULT_PATH:-}" ]; then
+    echo "Error: VAULT_PATH is not set. Run: source ~/.bashrc" >&2
+    exit 1
+  fi
+  if [ ! -d "$VAULT_PATH" ]; then
+    echo "Error: VAULT_PATH=$VAULT_PATH does not exist" >&2
+    exit 1
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# note log
+# ---------------------------------------------------------------------------
+_note_log() {
+  _require_vault
+
+  _log_help() {
+    cat <<'EOF'
+Usage: note log [OPTIONS] ["<text>"]
+
+Queue a note for writing to the Obsidian vault at the next session open.
+
+Options:
+  --decision    Set note type to decision
+  --pattern     Set note type to pattern
+  --session     Set note type to session
+  --person      Set note type to person
+  --help, -h    Show this help
+
+If no text argument is provided, opens $EDITOR for multi-line input.
+EOF
+  }
+
+  TYPE="manual"
+  TEXT=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --help|-h)  _log_help; exit 0 ;;
+      --decision) TYPE="decision"; shift ;;
+      --pattern)  TYPE="pattern"; shift ;;
+      --session)  TYPE="session"; shift ;;
+      --person)   TYPE="person"; shift ;;
+      -*)         echo "Unknown option: $1" >&2; exit 1 ;;
+      *)          TEXT="$1"; shift ;;
+    esac
+  done
+
+  if [ -z "$TEXT" ]; then
+    TMPFILE=$(mktemp /tmp/note-log-XXXXXX.md)
+    "${EDITOR:-nano}" "$TMPFILE"
+    TEXT=$(cat "$TMPFILE")
+    rm -f "$TMPFILE"
+    if [ -z "$TEXT" ]; then
+      echo "No text entered. Aborting." >&2
+      exit 1
+    fi
+  fi
+
+  TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  mkdir -p "$VAULT_PATH/.queue"
+  QUEUE_FILE="$VAULT_PATH/.queue/manual-${TIMESTAMP}.json"
+  jq -n --arg type "$TYPE" --arg text "$TEXT" --arg ts "$TIMESTAMP" \
+    '{"type":$type,"text":$text,"timestamp":$ts}' > "$QUEUE_FILE"
+  echo "Queued: $QUEUE_FILE"
+}
+
+# ---------------------------------------------------------------------------
+# note backfill
+# ---------------------------------------------------------------------------
+_note_backfill() {
+  _require_vault
+
+  if [ -z "${CLAUDE_OBSIDIAN_DIR:-}" ]; then
+    echo "Error: CLAUDE_OBSIDIAN_DIR is not set. Run: source ~/.bashrc" >&2
+    exit 1
+  fi
+
+  bash "$CLAUDE_OBSIDIAN_DIR/backfill.sh" "$@"
+}
+
+# ---------------------------------------------------------------------------
+# note status
+# ---------------------------------------------------------------------------
+_note_status() {
+  _require_vault
+
+  QUEUE_DIR="$VAULT_PATH/.queue"
+  PENDING=$(find "$QUEUE_DIR" -maxdepth 1 -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+  PROCESSING=$(find "$QUEUE_DIR/processing" -maxdepth 1 -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+  PROCESSED=$(find "$QUEUE_DIR/processed" -maxdepth 1 -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+
+  echo "Vault: $VAULT_PATH"
+  echo ""
+  echo "Queue:"
+  echo "  Pending:    $PENDING"
+  if [ "$PROCESSING" -gt 0 ]; then
+    echo "  Processing: $PROCESSING  (stranded — will recover on next session open)"
+  fi
+  echo "  Processed:  $PROCESSED total"
+  echo ""
+  echo "Git:"
+  DIRTY=$(git -C "$VAULT_PATH" status --short 2>/dev/null)
+  if [ -n "$DIRTY" ]; then
+    echo "$DIRTY" | sed 's/^/  /'
+  else
+    echo "  (clean)"
+  fi
+  LAST_COMMIT=$(git -C "$VAULT_PATH" log -1 --format="%ar — %s" 2>/dev/null || echo "no commits yet")
+  echo "  Last commit: $LAST_COMMIT"
+  REMOTE=$(git -C "$VAULT_PATH" remote get-url origin 2>/dev/null || echo "no remote configured")
+  echo "  Remote: $REMOTE"
+}
+
+# ---------------------------------------------------------------------------
+# note sync
+# ---------------------------------------------------------------------------
+_note_sync() {
+  _require_vault
+
+  echo "Syncing vault..."
+  git -C "$VAULT_PATH" add -A
+
+  if ! git -C "$VAULT_PATH" diff --cached --quiet; then
+    git -C "$VAULT_PATH" commit -m "vault: sync $(date -u +"%Y-%m-%d %H:%M")"
+    echo "[OK] Committed changes"
+  else
+    echo "[OK] Nothing to commit"
+  fi
+
+  if git -C "$VAULT_PATH" remote get-url origin >/dev/null 2>&1; then
+    git -C "$VAULT_PATH" push
+    echo "[OK] Pushed to remote"
+  else
+    echo "[WARN] No remote configured — skipping push"
+    echo "       Run: git -C \"$VAULT_PATH\" remote add origin <url> && git -C \"$VAULT_PATH\" push -u origin main"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch
+# ---------------------------------------------------------------------------
+CMD="${1:-}"
+shift 2>/dev/null || true
+
+case "$CMD" in
+  log)              _note_log "$@" ;;
+  backfill)         _note_backfill "$@" ;;
+  status)           _note_status ;;
+  sync)             _note_sync ;;
+  help|--help|-h|"") _note_usage ;;
+  *) echo "Unknown command: $CMD"; echo ""; _note_usage; exit 1 ;;
+esac

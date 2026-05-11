@@ -1,5 +1,6 @@
 ---
 type: decision
+context: {{context}}
 date: {{date}}
 project: "[[{{project}}]]"
 ---

@@ -4,14 +4,16 @@ set -e
 MODE=${1:-""}
 PROJECT_PATH=""
 OBSIDIAN=0
+UNINSTALL_OBSIDIAN=0
 
 usage() {
-  echo "Usage: bash install.sh [--global | --project [--path <dir>]] [--obsidian]"
+  echo "Usage: bash install.sh [--global | --project [--path <dir>]] [--obsidian] [--uninstall-obsidian]"
   echo ""
-  echo "  --global        Install agents, skills, and CLAUDE.md to ~/.claude/ (affects all projects)"
-  echo "  --project       Install agents and skills into a project directory"
-  echo "  --path <dir>    Target directory for project install (default: current directory)"
-  echo "  --obsidian      Also set up Obsidian vault integration (combinable with --global or --project)"
+  echo "  --global              Install agents, skills, and CLAUDE.md to ~/.claude/ (affects all projects)"
+  echo "  --project             Install agents and skills into a project directory"
+  echo "  --path <dir>          Target directory for project install (default: current directory)"
+  echo "  --obsidian            Also set up Obsidian vault integration (combinable with --global or --project)"
+  echo "  --uninstall-obsidian  Remove Obsidian integration (vault files are NOT deleted)"
   echo ""
   echo "If no flag is provided, you will be prompted to choose."
 }
@@ -24,20 +26,80 @@ fi
 # Parse flags
 while [ $# -gt 0 ]; do
   case "$1" in
-    --global)   MODE="--global"; shift ;;
-    --project)  MODE="--project"; shift ;;
-    --path)     PROJECT_PATH="$2"; shift 2 ;;
-    --obsidian) OBSIDIAN=1; shift ;;
-    --help|-h)  usage; exit 0 ;;
-    *)          echo "Unknown option: $1"; usage; exit 1 ;;
+    --global)             MODE="--global"; shift ;;
+    --project)            MODE="--project"; shift ;;
+    --path)               PROJECT_PATH="$2"; shift 2 ;;
+    --obsidian)           OBSIDIAN=1; shift ;;
+    --uninstall-obsidian) UNINSTALL_OBSIDIAN=1; shift ;;
+    --help|-h)            usage; exit 0 ;;
+    *)                    echo "Unknown option: $1"; usage; exit 1 ;;
   esac
 done
 
+if [ "$UNINSTALL_OBSIDIAN" -eq 1 ]; then
+  echo "Uninstalling Obsidian integration..."
+  echo "(Vault files will NOT be deleted)"
+  echo ""
+
+  # Remove global git hook
+  if git config --global core.hooksPath 2>/dev/null | grep -q "\.git-hooks"; then
+    git config --global --unset core.hooksPath 2>/dev/null && echo "[OK] Removed global core.hooksPath" || true
+  else
+    echo "[SKIP] core.hooksPath not pointing to ~/.git-hooks — left unchanged"
+  fi
+  if [ -f "$HOME/.git-hooks/post-commit" ]; then
+    rm "$HOME/.git-hooks/post-commit"
+    echo "[OK] Removed ~/.git-hooks/post-commit"
+  fi
+
+  # Remove session-start hook from settings.json
+  SETTINGS="$HOME/.claude/settings.json"
+  if [ -f "$SETTINGS" ] && command -v jq >/dev/null 2>&1; then
+    UPDATED=$(jq 'if .hooks.UserPromptSubmit then
+      .hooks.UserPromptSubmit |= map(select(.hooks[]?.command | test("session-start.sh") | not))
+    else . end' "$SETTINGS" 2>/dev/null)
+    if [ -n "$UPDATED" ]; then
+      printf '%s\n' "$UPDATED" > "$SETTINGS"
+      echo "[OK] Removed session-start hook from ~/.claude/settings.json"
+    fi
+  else
+    echo "[WARN] Could not update settings.json — remove session-start hook manually"
+  fi
+
+  # Strip vault block from ~/.claude/CLAUDE.md (assumes block is the last section)
+  CLAUDE_MD="$HOME/.claude/CLAUDE.md"
+  if [ -f "$CLAUDE_MD" ] && grep -qF "# Obsidian Vault" "$CLAUDE_MD"; then
+    LINE=$(grep -n "^# Obsidian Vault" "$CLAUDE_MD" | cut -d: -f1 | head -1)
+    head -n "$((LINE - 1))" "$CLAUDE_MD" > /tmp/claude_md_clean
+    mv /tmp/claude_md_clean "$CLAUDE_MD"
+    echo "[OK] Removed vault block from ~/.claude/CLAUDE.md"
+  else
+    echo "[SKIP] No vault block found in ~/.claude/CLAUDE.md"
+  fi
+
+  # Remove env vars from ~/.bashrc and ~/.profile
+  for RC in "$HOME/.bashrc" "$HOME/.profile"; do
+    [ -f "$RC" ] || continue
+    sed -i '/export VAULT_PATH=/d' "$RC"
+    sed -i '/export CLAUDE_OBSIDIAN_DIR=/d' "$RC"
+    echo "[OK] Removed vault env vars from $RC"
+  done
+
+  echo ""
+  echo "Done. Vault files untouched. Restart Claude Code to apply changes."
+  exit 0
+fi
+
 if [ -z "$MODE" ] && [ "$OBSIDIAN" -eq 0 ]; then
-  echo "Where would you like to install?"
-  echo "  1) Global (~/.claude/) — available in all projects"
-  echo "  2) Project (.claude/)  — specific project directory"
-  read -rp "Choose [1/2]: " choice
+  echo "┌─────────────────────────────────────────┐"
+  echo "│         better-claude installer         │"
+  echo "└─────────────────────────────────────────┘"
+  echo ""
+  echo "Step 1: Where would you like to install?"
+  echo "  1) Global (~/.claude/)  — all projects"
+  echo "  2) Project (.claude/)   — current project only"
+  echo ""
+  read -rp "Choice [1/2]: " choice
   case "$choice" in
     1) MODE="--global" ;;
     2)
@@ -47,6 +109,20 @@ if [ -z "$MODE" ] && [ "$OBSIDIAN" -eq 0 ]; then
         PROJECT_PATH="$input_path"
       fi
       ;;
+    *) echo "Invalid choice."; exit 1 ;;
+  esac
+
+  echo ""
+  echo "Step 2: What would you like to install?"
+  echo "  1) Core only      — agents, skills, CLAUDE.md, ralph, note"
+  echo "  2) Obsidian only  — vault integration, git hooks, session tracking"
+  echo "  3) Everything     — core + Obsidian integration"
+  echo ""
+  read -rp "Choice [1/2/3]: " components
+  case "$components" in
+    1) OBSIDIAN=0 ;;
+    2) OBSIDIAN=1; MODE="" ;;
+    3) OBSIDIAN=1 ;;
     *) echo "Invalid choice."; exit 1 ;;
   esac
 fi
@@ -147,20 +223,21 @@ install_obsidian() {
     vault_path="$(realpath -m "$default_vault")"
   fi
 
-  # Write env vars to ~/.bashrc (idempotent: replace existing exports)
-  local bashrc="$HOME/.bashrc"
-  if grep -qF "export VAULT_PATH=" "$bashrc" 2>/dev/null; then
-    sed -i "s|export VAULT_PATH=.*|export VAULT_PATH=\"$vault_path\"|" "$bashrc"
-  else
-    echo "export VAULT_PATH=\"$vault_path\"" >> "$bashrc"
-  fi
-  if grep -qF "export CLAUDE_OBSIDIAN_DIR=" "$bashrc" 2>/dev/null; then
-    sed -i "s|export CLAUDE_OBSIDIAN_DIR=.*|export CLAUDE_OBSIDIAN_DIR=\"$obsidian_dir\"|" "$bashrc"
-  else
-    echo "export CLAUDE_OBSIDIAN_DIR=\"$obsidian_dir\"" >> "$bashrc"
-  fi
-  echo "[OK] VAULT_PATH=$vault_path written to ~/.bashrc"
-  echo "[OK] CLAUDE_OBSIDIAN_DIR=$obsidian_dir written to ~/.bashrc"
+  # Write env vars to ~/.bashrc and ~/.profile (idempotent: replace existing exports)
+  for RC in "$HOME/.bashrc" "$HOME/.profile"; do
+    [ -f "$RC" ] || continue
+    if grep -qF "export VAULT_PATH=" "$RC" 2>/dev/null; then
+      sed -i "s|export VAULT_PATH=.*|export VAULT_PATH=\"$vault_path\"|" "$RC"
+    else
+      echo "export VAULT_PATH=\"$vault_path\"" >> "$RC"
+    fi
+    if grep -qF "export CLAUDE_OBSIDIAN_DIR=" "$RC" 2>/dev/null; then
+      sed -i "s|export CLAUDE_OBSIDIAN_DIR=.*|export CLAUDE_OBSIDIAN_DIR=\"$obsidian_dir\"|" "$RC"
+    else
+      echo "export CLAUDE_OBSIDIAN_DIR=\"$obsidian_dir\"" >> "$RC"
+    fi
+    echo "[OK] Env vars written to $RC"
+  done
 
   # Export for current shell so sub-scripts can use them
   export VAULT_PATH="$vault_path"
@@ -184,6 +261,13 @@ install_ralph() {
   fi
 }
 
+install_note() {
+  mkdir -p ~/.local/bin
+  cp note ~/.local/bin/note
+  chmod +x ~/.local/bin/note
+  echo "[OK] note  -> ~/.local/bin/note"
+}
+
 echo "Installing better-claude..."
 echo ""
 
@@ -192,6 +276,7 @@ if [ "$MODE" = "--global" ]; then
   install_skills global
   install_claude_md global
   install_ralph
+  install_note
 elif [ "$MODE" = "--project" ]; then
   echo "Target: $PROJECT_DIR"
   echo ""
@@ -199,6 +284,7 @@ elif [ "$MODE" = "--project" ]; then
   install_skills project
   install_claude_md project
   install_ralph
+  install_note
 elif [ "$OBSIDIAN" -eq 0 ]; then
   usage
   exit 1
@@ -209,7 +295,11 @@ if [ "$OBSIDIAN" -eq 1 ]; then
 fi
 
 echo ""
-echo "Done! Restart Claude Code to pick up new skills and agents."
+echo "Done!"
+echo ""
+echo "Next steps:"
+echo "  • Restart Claude Code to pick up new skills and agents"
 if [ "$OBSIDIAN" -eq 1 ]; then
-  echo "Run: source ~/.bashrc  (or open a new terminal) to activate VAULT_PATH and CLAUDE_OBSIDIAN_DIR"
+  echo "  • Open a new terminal (or run: source ~/.bashrc) to activate VAULT_PATH"
+  echo "  • Add a GitHub remote to your vault: cd \$VAULT_PATH && git remote add origin <url> && git push -u origin main"
 fi

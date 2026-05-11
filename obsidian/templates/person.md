@@ -1,5 +1,6 @@
 ---
 type: person
+context: {{context}}
 name: {{name}}
 role: {{role}}
 company: {{company}}
