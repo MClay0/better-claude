@@ -4,9 +4,21 @@ set -e
 VAULT_PATH="${VAULT_PATH:-$HOME/vault}"
 VAULT_PATH="$(realpath -m "$VAULT_PATH")"
 
-# Distro name and Windows UNC path (used in README and end-of-run output)
+# Distro name (for WSL UNC paths)
 DISTRO=$(grep ^NAME= /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"' || echo "Ubuntu")
-UNC_PATH=$(echo "$VAULT_PATH" | sed "s|^/home/|\\\\\\\\wsl\$\\\\${DISTRO}\\\\home\\\\|" | sed 's|/|\\|g')
+
+# Compute the Windows-side path for Obsidian:
+# - /mnt/c/... paths → C:\... (native Windows filesystem, preferred)
+# - /home/... paths  → \\wsl$\<distro>\home\... (WSL network share, limited Obsidian support)
+if echo "$VAULT_PATH" | grep -q "^/mnt/[a-z]/"; then
+  DRIVE=$(echo "$VAULT_PATH" | sed 's|^/mnt/\([a-z]\)/.*|\1|' | tr '[:lower:]' '[:upper:]')
+  WIN_PATH=$(echo "$VAULT_PATH" | sed "s|^/mnt/[a-z]/|${DRIVE}:\\\\|" | sed 's|/|\\|g')
+  OBSIDIAN_PATH="$WIN_PATH"
+  OBSIDIAN_NOTE="Windows filesystem path (recommended — full Obsidian support)"
+else
+  OBSIDIAN_PATH=$(echo "$VAULT_PATH" | sed "s|^/home/|\\\\\\\\wsl\$\\\\${DISTRO}\\\\home\\\\|" | sed 's|/|\\|g')
+  OBSIDIAN_NOTE="WSL network share path (limited — file watcher may not work in Obsidian)"
+fi
 
 echo "Scaffolding vault at: $VAULT_PATH"
 
@@ -126,8 +138,8 @@ fi
 echo ""
 echo "Vault ready: $VAULT_PATH"
 echo ""
-echo "Windows UNC path for Obsidian:"
-echo "  $UNC_PATH"
+echo "Open in Obsidian ($OBSIDIAN_NOTE):"
+echo "  $OBSIDIAN_PATH"
 echo ""
 echo "To sync across devices: create a private GitHub repo, then run:"
 echo "  git remote add origin <url> && git push -u origin main"

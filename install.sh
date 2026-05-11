@@ -213,8 +213,20 @@ install_obsidian() {
   echo ""
   echo "Setting up Obsidian vault integration..."
 
-  # Prompt for vault path
-  local default_vault="$HOME/vault"
+  # Detect Windows home dir for default vault path (WSL only)
+  # Vaults on the Windows filesystem (/mnt/c/...) work fully with Obsidian on Windows.
+  # Vaults on the WSL filesystem (~/vault) trigger an EISDIR watcher error in Obsidian.
+  local default_vault
+  local win_home
+  win_home=$(wslpath "$(cmd.exe /c 'echo %USERPROFILE%' 2>/dev/null | tr -d '\r')" 2>/dev/null)
+  if [ -n "$win_home" ] && [ -d "$win_home" ]; then
+    default_vault="$win_home/Documents/vault"
+  else
+    default_vault="$HOME/vault"
+  fi
+
+  echo ""
+  echo "Vault location: use a Windows filesystem path (/mnt/c/...) so Obsidian can open it natively."
   read -rp "Vault path [default: $default_vault]: " input_vault
   local vault_path
   if [ -n "$input_vault" ]; then

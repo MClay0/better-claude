@@ -177,13 +177,17 @@ TABLE date, project FROM "" WHERE context = "school" SORT date DESC
 
 ### Opening in Windows Obsidian (WSL)
 
-After running the installer, it prints a Windows UNC path:
+The vault must live on the **Windows filesystem** (`/mnt/c/...` in WSL), not the WSL filesystem. Obsidian's file watcher throws an `EISDIR` error on WSL network share paths (`\\wsl$\...`) and won't open the vault.
+
+The installer detects your Windows home directory and defaults the vault path to `/mnt/c/Users/<you>/Documents/vault`. Accept the default or enter any path under `/mnt/c/`.
+
+After setup the installer prints the Windows path:
 
 ```
-\\wsl$\Ubuntu\home\you\vault
+C:\Users\you\Documents\vault
 ```
 
-In Obsidian: **Open folder as vault** → paste that path. No plugin required — Obsidian reads the markdown natively.
+In Obsidian: **Open folder as vault** → paste that path. No plugin required.
 
 ### Syncing across devices
 
